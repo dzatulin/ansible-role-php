@@ -1,0 +1,30 @@
+[www]
+listen = {{ php_fpm_listen }}
+listen.allowed_clients = {{ php_fpm_listen_allowed_clients }}
+user = {{ php_fpm_pool_user }}
+group = {{ php_fpm_pool_group }}
+
+pm = dynamic
+pm.max_children = {{ php_fpm_pm_max_children }}
+pm.start_servers = {{ php_fpm_pm_start_servers }}
+pm.min_spare_servers = {{ php_fpm_pm_min_spare_servers }}
+pm.max_spare_servers = {{ php_fpm_pm_max_spare_servers }}
+pm.max_requests = {{ php_fpm_pm_max_requests }}
+request_terminate_timeout = 1200
+
+php_admin_value[disable_functions] = pcntl_alarm,pcntl_fork,pcntl_waitpid,pcntl_wait,pcntl_wifexited,pcntl_wifstopped,pcntl_wifsignaled,pcntl_wexitstatus,pcntl_wtermsig,pcntl_wstopsig,pcntl_signal,pcntl_signal_dispatch,pcntl_get_last_error,pcntl_strerror,pcntl_sigprocmask,pcntl_sigwaitinfo,pcntl_sigtimedwait,pcntl_getpriority,pcntl_setpriority,system,popen,dl,virtual,ini_restore,posix_getpwuid,show_source
+
+;Cache
+php_value[session.save_handler] = {{ php_fpm_session_save_handler }}
+php_value[session.save_path] = "{{ php_fpm_session_save_path  }}"
+php_value[soap.wsdl_cache_dir]  = /var/lib/php/wsdlcache
+
+;Logs
+php_admin_value[error_log] = {{ php_fpm_error_log_path }}
+php_admin_flag[log_errors] = on
+slowlog = {{ php_fpm_slow_log_path }}
+request_slowlog_timeout = 10s
+
+;Monitoring
+pm.status_path = /status
+ping.path = /ping

@@ -1,0 +1,39 @@
+---
+__php_packages:
+  - php
+  - php-zip
+  - php-cli
+  - php-common
+  - php-devel
+  - php-fpm
+  - php-gd
+  - php-imap
+  - php-ldap
+  - php-mbstring
+  - php-opcache
+  - php-pdo
+  - php-pear
+  - php-pecl-apcu
+  - php-pecl-geoip
+  - php-pecl-redis
+  - php-xml
+  - php-xmlrpc
+  - php-redis
+  - php-mysql
+  - php-intl
+__php_webserver_daemon: "nginx"
+
+__php_conf_paths:
+  - /etc
+
+__php_extension_conf_paths:
+  - /etc/php.d
+
+__php_apc_conf_filename: 50-apc.ini
+__php_opcache_conf_filename: 10-opcache.ini
+__php_fpm_daemon: php-fpm
+__php_fpm_conf_path: "/etc/fpm"
+__php_fpm_pool_conf_path: "/etc/php-fpm.d/www.conf"
+
+__php_fpm_pool_user: developer
+__php_fpm_pool_group: developer

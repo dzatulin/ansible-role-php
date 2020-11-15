@@ -1,0 +1,130 @@
+---
+#- name: Define php_fpm_daemon.
+#  set_fact:
+#    php_fpm_daemon: "{{ __php_fpm_daemon }}"
+#  when: php_fpm_daemon is not defined
+
+#- name: Define php_fpm_pool_conf_path.
+#  set_fact:
+#    php_fpm_pool_conf_path: "{{ __php_fpm_pool_conf_path }}"
+#  when: php_fpm_pool_conf_path is not defined
+
+#- name: Define php_fpm_pool_user.
+#  set_fact:
+#    php_fpm_pool_user: "{{ __php_fpm_pool_user }}"
+#  when: php_fpm_pool_user is not defined
+
+#- name: Define php_fpm_pool_group.
+#  set_fact:
+#    php_fpm_pool_group: "{{ __php_fpm_pool_group }}"
+#  when: php_fpm_pool_group is not defined
+
+- name: Stat php_fpm_pool_conf_path
+  stat:
+    path: "{{ php_fpm_pool_conf_path | dirname }}"
+  register: php_fpm_pool_conf_path_dir_stat
+
+- name: Ensure the default pool directory exists.
+  file:
+    path: "{{ php_fpm_pool_conf_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: php_fpm_pool_conf_path_dir_stat.stat.islnk is not defined
+
+- name: Check error log file exists.
+  file:
+    path: "{{ php_fpm_error_log_path }}"
+    state: touch
+    owner: root
+    group: root
+    mode: 0600
+  when: php_enable_php_fpm
+
+- name: Check slow log file exists.
+  file:
+    path: "{{ php_fpm_slow_log_path }}"
+    state: touch
+    owner: root
+    group: root
+    mode: 0600
+  when: php_enable_php_fpm
+
+- name: Copy config PHP-FPM
+  template:
+    src: www.conf.j2
+    dest: "{{ php_fpm_pool_conf_path }}"
+    owner: root
+    group: root
+    mode: 0644
+#    force: false
+  when: php_enable_php_fpm
+  notify: restart php-fpm
+
+- name: Change permission of directory php_session
+  file:
+    path: /var/lib/php/session
+    state: directory
+    mode: 0775
+    owner: developer
+    group: developer
+  notify: restart php-fpm 
+
+#- name: Change session.save_path
+#  lineinfile:
+#    path: "{{ php_fpm_pool_conf_path }}"
+#    regexp: '^(php_value\[session\.save_path\].*)'
+#    backrefs: true
+#    line: 'php_value[session.save_path] = "tcp://localhost:6379?auth=Kr8HWyrIDvTULcPLYFISH07DNt"'
+
+#- name: Change session.save_handler
+#  lineinfile:
+#    path: "{{ php_fpm_pool_conf_path }}"
+#    regexp: '^(php_value\[session\.save_handler\].*)'
+#    backrefs: true
+#    line: 'php_value[session.save_handler] = redis'
+
+#- name: Configure php-fpm pool (if enabled).
+#  lineinfile:
+#    dest: "{{ php_fpm_pool_conf_path }}"
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#    state: present
+#  with_items:
+#    - regexp: "^user.?=.+$"
+#      line: "user = {{ php_fpm_pool_user }}"
+#    - regexp: "^group.?=.+$"
+#      line: "group = {{ php_fpm_pool_group }}"
+#    - regexp: "^listen.?=.+$"
+#      line: "listen = {{ php_fpm_listen }}"
+#    - regexp: '^listen\.allowed_clients.?=.+$'
+#      line: "listen.allowed_clients = {{ php_fpm_listen_allowed_clients }}"
+#    - regexp: '^pm\.max_children.?=.+$'
+#      line: "pm.max_children = {{ php_fpm_pm_max_children }}"
+#    - regexp: '^pm\.start_servers.?=.+$'
+#      line: "pm.start_servers = {{ php_fpm_pm_start_servers }}"
+#    - regexp: '^pm\.min_spare_servers.?=.+$'
+#      line: "pm.min_spare_servers = {{ php_fpm_pm_min_spare_servers }}"
+#    - regexp: '^pm\.max_spare_servers.?=.+$'
+#      line: "pm.max_spare_servers = {{ php_fpm_pm_max_spare_servers }}"
+#    - regexp: '^pm\.max_requests.?=.+$'
+#      line: "pm.max_requests = {{ php_fpm_pm_max_requests }}"
+#  when: php_enable_php_fpm
+#  notify: restart php-fpm
+
+- name: Ensure php-fpm is started and enabled at boot (if configured).
+  service:
+    name: "{{ php_fpm_daemon }}"
+    state: started
+    enabled: true
+  when: php_enable_php_fpm and ansible_distribution != "Debian"
+
+# See: https://github.com/ansible/ansible/issues/22303
+- name: Ensure php-fpm is started and enabled at boot (if configured, Debian).
+  service:
+    name: "{{ php_fpm_daemon }}"
+    state: started
+    enabled: true
+    use: service
+  when: php_enable_php_fpm and ansible_distribution == "Debian"
